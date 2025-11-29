@@ -81,9 +81,9 @@ To the standardized format:
 
 | Original | Renamed |
 |----------|---------|
-| `104840-170649 - Pal Patel - Nov 26, 2025 933 PM` | `pal_patel_nov_26_2025_933_pm` |
-| `104860-170649 - . Karanvir Singh - Nov 20, 2025 1059 PM` | `.karanvir_singh_nov_20_2025_1059_pm` |
-| `104848-170649 - Jueszel Morgan-Mcleggon - Nov 28, 2025 1036 PM` | `jueszel_morgan_mcleggon_nov_28_2025_1036_pm` |
+| `123456-789012 - John Smith - Nov 26, 2025 933 PM` | `john_smith_nov_26_2025_933_pm` |
+| `234567-789012 - . Jane Doe - Nov 20, 2025 1059 PM` | `.jane_doe_nov_20_2025_1059_pm` |
+| `345678-789012 - Mary Smith-Jones - Nov 28, 2025 1036 PM` | `mary_smith_jones_nov_28_2025_1036_pm` |
 | `index.html` | *(deleted)* |
 
 ## Building Standalone Executable

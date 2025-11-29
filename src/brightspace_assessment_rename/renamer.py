@@ -29,7 +29,7 @@ class FileRenamer:
         Parse a Brightspace folder name to extract student name and date.
         
         Format: {numbers}-{numbers} - {Name} - {Date Time}
-        Example: "104840-170649 - Pal Patel - Nov 26, 2025 933 PM"
+        Example: "123456-789012 - John Smith - Nov 26, 2025 933 PM"
         
         Args:
             folder_name: The original Brightspace folder name
@@ -77,11 +77,11 @@ class FileRenamer:
         """
         Convert a Brightspace folder name to the standard format.
         
-        Input:  "104840-170649 - Pal Patel - Nov 26, 2025 933 PM"
-        Output: "pal_patel_nov_26_2025_933_pm"
+        Input:  "123456-789012 - John Smith - Nov 26, 2025 933 PM"
+        Output: "john_smith_nov_26_2025_933_pm"
         
-        Input:  "104860-170649 - . Karanvir Singh - Nov 20, 2025 1059 PM"
-        Output: ".karanvir_singh_nov_20_2025_1059_pm"
+        Input:  "234567-789012 - . Jane Doe - Nov 20, 2025 1059 PM"
+        Output: ".jane_doe_nov_20_2025_1059_pm"
         
         Args:
             folder_name: The original Brightspace folder name
