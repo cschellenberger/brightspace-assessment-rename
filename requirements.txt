@@ -1,0 +1,1 @@
+# Core dependencies (none required - tkinter is built-in)
