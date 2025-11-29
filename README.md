@@ -18,12 +18,14 @@ A simple GUI application for standardizing folder names from Brightspace assessm
 ### From Source
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/cschellenberger/brightspace-assessment-rename.git
    cd brightspace-assessment-rename
    ```
 
 2. Create a virtual environment:
+
    ```bash
    python -m venv venv
    ```
@@ -33,11 +35,13 @@ A simple GUI application for standardizing folder names from Brightspace assessm
    - macOS/Linux: `source venv/bin/activate`
 
 4. Install the package:
+
    ```bash
    pip install -e .
    ```
 
 5. (Optional) Install development dependencies:
+
    ```bash
    pip install -e ".[dev]"
    ```
