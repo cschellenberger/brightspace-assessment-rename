@@ -1,14 +1,17 @@
 # Brightspace Assessment Rename
 
-A simple GUI application for standardizing file names from Brightspace assessment downloads.
+A simple GUI application for standardizing folder names from Brightspace assessment downloads.
 
 ## Features
 
-- **Easy-to-use GUI**: Browse and select folders with a simple click
-- **Preview changes**: See exactly what files will be renamed before committing
-- **Standard naming format**: Converts filenames to `lowercase_with_underscores.ext`
+- **Easy-to-use GUI**: Browse and select Brightspace download folders with a simple click
+- **Preview changes**: See exactly what folders will be renamed before committing
+- **Brightspace-specific**: Parses the standard Brightspace folder format `{id}-{id} - {Name} - {Date Time}`
+- **Standard naming format**: Converts folder names to `student_name_date_time` format
+- **Preserves sorting**: Names starting with `.` (Brightspace data entry quirk) are preserved for consistent grading order
+- **Auto-cleanup**: Automatically deletes `index.html` files from downloads
 - **Safe operation**: Handles duplicate names automatically
-- **Distributable**: Can be packaged as a standalone executable for easy sharing
+- **Distributable**: Can be packaged as a standalone executable for easy sharing via SharePoint
 
 ## Installation
 
@@ -16,7 +19,7 @@ A simple GUI application for standardizing file names from Brightspace assessmen
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/brightspace-assessment-rename.git
+   git clone https://github.com/cschellenberger/brightspace-assessment-rename.git
    cd brightspace-assessment-rename
    ```
 
@@ -53,25 +56,35 @@ python -m brightspace_assessment_rename
 
 ### Using the GUI
 
-1. Click **Browse...** to select a folder containing files to rename
-2. Click **Preview Changes** to see what will be renamed
+1. Click **Browse...** to select a Brightspace assessment download folder
+2. Click **Preview Changes** to see what folders will be renamed and files deleted
 3. Review the changes in the preview panel
-4. Click **Rename Files** to apply the changes
+4. Click **Rename Folders** to apply the changes
 
 ### Naming Convention
 
-Files are converted to the following format:
+Brightspace folders are converted from:
+
+`{id}-{id} - {Student Name} - {Date Time}`
+
+To the standardized format:
+
+`student_name_date_time`
+
 - All lowercase
 - Spaces and hyphens replaced with underscores
 - Special characters removed
-- Multiple underscores collapsed to single underscore
+- Leading dots preserved (for Brightspace data entry quirks)
+- `index.html` files are deleted
 
 **Examples:**
+
 | Original | Renamed |
 |----------|---------|
-| `John Smith - Assignment 1.pdf` | `john_smith_assignment_1.pdf` |
-| `Mary O'Connor Quiz #2.docx` | `mary_oconnor_quiz_2.docx` |
-| `UPPERCASE FILE.TXT` | `uppercase_file.txt` |
+| `104840-170649 - Pal Patel - Nov 26, 2025 933 PM` | `pal_patel_nov_26_2025_933_pm` |
+| `104860-170649 - . Karanvir Singh - Nov 20, 2025 1059 PM` | `.karanvir_singh_nov_20_2025_1059_pm` |
+| `104848-170649 - Jueszel Morgan-Mcleggon - Nov 28, 2025 1036 PM` | `jueszel_morgan_mcleggon_nov_28_2025_1036_pm` |
+| `index.html` | *(deleted)* |
 
 ## Building Standalone Executable
 

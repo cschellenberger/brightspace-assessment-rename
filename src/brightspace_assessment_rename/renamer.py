@@ -1,38 +1,57 @@
-"""File renaming logic for standardizing file names."""
+"""File renaming logic for standardizing Brightspace assessment folder names."""
 
 import re
 from pathlib import Path
 
 
 class FileRenamer:
-    """Handles file renaming operations with standardized naming conventions."""
+    """Handles folder renaming operations for Brightspace assessment downloads."""
+    
+    # Files to delete during rename operation
+    FILES_TO_DELETE = {"index.html"}
+    
+    # Brightspace folder pattern: {numbers}-{numbers} - {Name} - {Date Time}
+    BRIGHTSPACE_PATTERN = re.compile(
+        r'^\d+-\d+\s*-\s*(.+?)\s*-\s*(\w+\s+\d+,\s+\d+\s+\d+\s*(?:AM|PM))$'
+    )
     
     def __init__(self):
         """Initialize the FileRenamer."""
         # Characters to replace with underscores
         self.replace_chars = re.compile(r'[\s\-]+')
-        # Characters to remove entirely
+        # Characters to remove entirely (keep alphanumeric, underscore, dot)
         self.remove_chars = re.compile(r'[^\w\._]')
         # Multiple underscores
         self.multi_underscore = re.compile(r'_+')
     
-    def standardize_name(self, filename: str) -> str:
+    def parse_brightspace_name(self, folder_name: str) -> tuple[str, str] | None:
         """
-        Convert a filename to the standard format.
+        Parse a Brightspace folder name to extract student name and date.
         
-        Standard format: lowercase_with_underscores.ext
+        Format: {numbers}-{numbers} - {Name} - {Date Time}
+        Example: "104840-170649 - Pal Patel - Nov 26, 2025 933 PM"
         
         Args:
-            filename: The original filename (with or without extension)
+            folder_name: The original Brightspace folder name
             
         Returns:
-            The standardized filename
+            Tuple of (student_name, date_time) or None if pattern doesn't match
         """
-        # Separate name and extension
-        path = Path(filename)
-        name = path.stem
-        extension = path.suffix.lower()
+        match = self.BRIGHTSPACE_PATTERN.match(folder_name)
+        if match:
+            return match.group(1).strip(), match.group(2).strip()
+        return None
+    
+    def standardize_name(self, name: str) -> str:
+        """
+        Convert a name to the standard format: lowercase_with_underscores
         
+        Args:
+            name: The original name string
+            
+        Returns:
+            The standardized name
+        """
         # Convert to lowercase
         name = name.lower()
         
@@ -52,63 +71,112 @@ class FileRenamer:
         if not name:
             name = "unnamed"
         
-        return f"{name}{extension}"
+        return name
+    
+    def standardize_folder_name(self, folder_name: str) -> str:
+        """
+        Convert a Brightspace folder name to the standard format.
+        
+        Input:  "104840-170649 - Pal Patel - Nov 26, 2025 933 PM"
+        Output: "pal_patel_nov_26_2025_933_pm"
+        
+        Input:  "104860-170649 - . Karanvir Singh - Nov 20, 2025 1059 PM"
+        Output: ".karanvir_singh_nov_20_2025_1059_pm"
+        
+        Args:
+            folder_name: The original Brightspace folder name
+            
+        Returns:
+            The standardized folder name
+        """
+        parsed = self.parse_brightspace_name(folder_name)
+        
+        if parsed:
+            student_name, date_time = parsed
+            
+            # Check if name starts with ". " (Brightspace data entry quirk)
+            has_leading_dot = student_name.startswith('. ')
+            if has_leading_dot:
+                student_name = student_name[2:]  # Remove ". " prefix
+            
+            # Standardize both parts
+            std_name = self.standardize_name(student_name)
+            std_date = self.standardize_name(date_time)
+            
+            # Reconstruct with leading dot if originally present
+            if has_leading_dot:
+                return f".{std_name}_{std_date}"
+            else:
+                return f"{std_name}_{std_date}"
+        else:
+            # Fallback: just standardize the whole name
+            return self.standardize_name(folder_name)
     
     def get_rename_preview(self, folder_path: Path) -> list[tuple[str, str]]:
         """
-        Get a preview of all file renames in a folder.
+        Get a preview of all folder renames and files to delete.
         
         Args:
-            folder_path: Path to the folder containing files
+            folder_path: Path to the folder containing Brightspace subfolders
             
         Returns:
             List of tuples (original_name, new_name)
+            Files to delete will show new_name as "[DELETE]"
         """
         changes = []
         
         if not folder_path.exists() or not folder_path.is_dir():
             return changes
         
-        for file_path in sorted(folder_path.iterdir()):
-            if file_path.is_file():
-                original_name = file_path.name
-                new_name = self.standardize_name(original_name)
+        for item_path in sorted(folder_path.iterdir()):
+            original_name = item_path.name
+            
+            if item_path.is_file():
+                # Mark files for deletion if in delete list
+                if original_name in self.FILES_TO_DELETE:
+                    changes.append((original_name, "[DELETE]"))
+            elif item_path.is_dir():
+                new_name = self.standardize_folder_name(original_name)
                 changes.append((original_name, new_name))
         
         return changes
     
     def rename_files(self, folder_path: Path) -> int:
         """
-        Rename all files in a folder to the standard format.
+        Rename all Brightspace folders and delete index.html files.
         
         Args:
-            folder_path: Path to the folder containing files
+            folder_path: Path to the folder containing Brightspace subfolders
             
         Returns:
-            Number of files renamed
+            Number of items renamed/deleted
         """
-        renamed_count = 0
+        action_count = 0
         
         if not folder_path.exists() or not folder_path.is_dir():
-            return renamed_count
+            return action_count
         
-        for file_path in folder_path.iterdir():
-            if file_path.is_file():
-                original_name = file_path.name
-                new_name = self.standardize_name(original_name)
+        for item_path in folder_path.iterdir():
+            original_name = item_path.name
+            
+            if item_path.is_file():
+                # Delete files in the delete list
+                if original_name in self.FILES_TO_DELETE:
+                    item_path.unlink()
+                    action_count += 1
+            elif item_path.is_dir():
+                new_name = self.standardize_folder_name(original_name)
                 
                 if original_name != new_name:
-                    new_path = file_path.parent / new_name
+                    new_path = item_path.parent / new_name
                     
                     # Handle duplicate names by adding a number suffix
                     counter = 1
                     while new_path.exists():
-                        stem = Path(new_name).stem
-                        ext = Path(new_name).suffix
-                        new_path = file_path.parent / f"{stem}_{counter}{ext}"
+                        new_path = item_path.parent / f"{new_name}_{counter}"
                         counter += 1
                     
-                    file_path.rename(new_path)
-                    renamed_count += 1
+                    item_path.rename(new_path)
+                    action_count += 1
         
-        return renamed_count
+        return action_count

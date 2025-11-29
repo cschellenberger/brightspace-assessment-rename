@@ -14,8 +14,8 @@ class Application(tk.Tk):
         super().__init__()
         
         self.title("Brightspace Assessment Rename")
-        self.geometry("600x400")
-        self.minsize(500, 350)
+        self.geometry("700x450")
+        self.minsize(600, 400)
         
         self.renamer = FileRenamer()
         self.selected_folder: Path | None = None
@@ -28,17 +28,28 @@ class Application(tk.Tk):
         # Header
         self.header_label = ttk.Label(
             self,
-            text="Brightspace Assessment File Renamer",
+            text="Brightspace Assessment Folder Renamer",
             font=("Segoe UI", 14, "bold")
         )
         
+        # Description
+        self.desc_label = ttk.Label(
+            self,
+            text="Renames Brightspace assessment folders to: student_name_date_time format",
+            font=("Segoe UI", 9)
+        )
+        
         # Folder selection frame
-        self.folder_frame = ttk.LabelFrame(self, text="Select Folder", padding=10)
+        self.folder_frame = ttk.LabelFrame(
+            self, 
+            text="Select Brightspace Download Folder", 
+            padding=10
+        )
         self.folder_path_var = tk.StringVar(value="No folder selected")
         self.folder_label = ttk.Label(
             self.folder_frame,
             textvariable=self.folder_path_var,
-            wraplength=450
+            wraplength=500
         )
         self.browse_button = ttk.Button(
             self.folder_frame,
@@ -47,11 +58,11 @@ class Application(tk.Tk):
         )
         
         # Preview frame
-        self.preview_frame = ttk.LabelFrame(self, text="Preview", padding=10)
+        self.preview_frame = ttk.LabelFrame(self, text="Preview Changes", padding=10)
         self.preview_text = tk.Text(
             self.preview_frame,
-            height=10,
-            width=60,
+            height=12,
+            width=70,
             state="disabled",
             font=("Consolas", 9)
         )
@@ -72,13 +83,13 @@ class Application(tk.Tk):
         )
         self.rename_button = ttk.Button(
             self.button_frame,
-            text="Rename Files",
-            command=self._rename_files,
+            text="Rename Folders",
+            command=self._rename_folders,
             state="disabled"
         )
         
         # Status bar
-        self.status_var = tk.StringVar(value="Ready")
+        self.status_var = tk.StringVar(value="Ready - Select a Brightspace download folder")
         self.status_bar = ttk.Label(
             self,
             textvariable=self.status_var,
@@ -89,35 +100,38 @@ class Application(tk.Tk):
     def _create_layout(self):
         """Arrange widgets in the window."""
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(2, weight=1)
+        self.rowconfigure(3, weight=1)
         
         # Header
-        self.header_label.grid(row=0, column=0, pady=(10, 5), padx=10)
+        self.header_label.grid(row=0, column=0, pady=(10, 0), padx=10)
+        self.desc_label.grid(row=1, column=0, pady=(0, 5), padx=10)
         
         # Folder selection
-        self.folder_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
+        self.folder_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=5)
         self.folder_frame.columnconfigure(0, weight=1)
         self.folder_label.grid(row=0, column=0, sticky="ew", padx=(0, 10))
         self.browse_button.grid(row=0, column=1)
         
         # Preview
-        self.preview_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=5)
+        self.preview_frame.grid(row=3, column=0, sticky="nsew", padx=10, pady=5)
         self.preview_frame.columnconfigure(0, weight=1)
         self.preview_frame.rowconfigure(0, weight=1)
         self.preview_text.grid(row=0, column=0, sticky="nsew")
         self.scrollbar.grid(row=0, column=1, sticky="ns")
         
         # Buttons
-        self.button_frame.grid(row=3, column=0, pady=10)
+        self.button_frame.grid(row=4, column=0, pady=10)
         self.preview_button.pack(side="left", padx=5)
         self.rename_button.pack(side="left", padx=5)
         
         # Status bar
-        self.status_bar.grid(row=4, column=0, sticky="ew", padx=5, pady=(0, 5))
+        self.status_bar.grid(row=5, column=0, sticky="ew", padx=5, pady=(0, 5))
     
     def _browse_folder(self):
         """Open folder selection dialog."""
-        folder = filedialog.askdirectory(title="Select folder with files to rename")
+        folder = filedialog.askdirectory(
+            title="Select Brightspace Assessment Download Folder"
+        )
         if folder:
             self.selected_folder = Path(folder)
             self.folder_path_var.set(str(self.selected_folder))
@@ -133,7 +147,7 @@ class Application(tk.Tk):
         self.preview_text.configure(state="disabled")
     
     def _preview_changes(self):
-        """Show preview of file renames."""
+        """Show preview of folder renames and files to delete."""
         if not self.selected_folder:
             return
         
@@ -143,30 +157,42 @@ class Application(tk.Tk):
         self.preview_text.delete("1.0", "end")
         
         if not changes:
-            self.preview_text.insert("end", "No files found or no changes needed.")
+            self.preview_text.insert("end", "No folders found or no changes needed.")
             self.status_var.set("No changes to make")
         else:
+            rename_count = 0
+            delete_count = 0
+            
             for old_name, new_name in changes:
-                if old_name != new_name:
-                    self.preview_text.insert("end", f"• {old_name}\n")
-                    self.preview_text.insert("end", f"  → {new_name}\n\n")
+                if new_name == "[DELETE]":
+                    self.preview_text.insert("end", f"🗑 {old_name} (will be deleted)\n\n")
+                    delete_count += 1
+                elif old_name != new_name:
+                    self.preview_text.insert("end", f"📁 {old_name}\n")
+                    self.preview_text.insert("end", f"   → {new_name}\n\n")
+                    rename_count += 1
             
-            change_count = sum(1 for old, new in changes if old != new)
-            self.status_var.set(f"Found {change_count} file(s) to rename")
+            status_parts = []
+            if rename_count > 0:
+                status_parts.append(f"{rename_count} folder(s) to rename")
+            if delete_count > 0:
+                status_parts.append(f"{delete_count} file(s) to delete")
             
-            if change_count > 0:
+            self.status_var.set("Found " + ", ".join(status_parts))
+            
+            if rename_count > 0 or delete_count > 0:
                 self.rename_button.configure(state="normal")
         
         self.preview_text.configure(state="disabled")
     
-    def _rename_files(self):
-        """Execute the file renaming operation."""
+    def _rename_folders(self):
+        """Execute the folder renaming operation."""
         if not self.selected_folder:
             return
         
         confirm = messagebox.askyesno(
             "Confirm Rename",
-            "Are you sure you want to rename the files?\n\n"
+            "Are you sure you want to rename the folders and delete index.html?\n\n"
             "This action cannot be undone automatically."
         )
         
@@ -175,9 +201,9 @@ class Application(tk.Tk):
                 count = self.renamer.rename_files(self.selected_folder)
                 messagebox.showinfo(
                     "Success",
-                    f"Successfully renamed {count} file(s)."
+                    f"Successfully processed {count} item(s)."
                 )
-                self.status_var.set(f"Renamed {count} file(s)")
+                self.status_var.set(f"Processed {count} item(s)")
                 self._preview_changes()  # Refresh preview
             except Exception as e:
                 messagebox.showerror("Error", f"An error occurred:\n{str(e)}")

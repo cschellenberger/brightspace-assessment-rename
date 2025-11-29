@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "brightspace-assessment-rename"
 version = "0.1.0"
-description = "A GUI tool for standardizing file names from Brightspace assessments"
+description = "A GUI tool for standardizing folder names from Brightspace assessment downloads"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Cody Schellenberger"}
 ]
 keywords = ["brightspace", "file-rename", "assessment", "gui", "education"]
 classifiers = [
@@ -38,9 +38,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/brightspace-assessment-rename"
-Repository = "https://github.com/yourusername/brightspace-assessment-rename"
-Issues = "https://github.com/yourusername/brightspace-assessment-rename/issues"
+Homepage = "https://github.com/cschellenberger/brightspace-assessment-rename"
+Repository = "https://github.com/cschellenberger/brightspace-assessment-rename"
+Issues = "https://github.com/cschellenberger/brightspace-assessment-rename/issues"
 
 [project.gui-scripts]
 brightspace-rename = "brightspace_assessment_rename.main:main"
